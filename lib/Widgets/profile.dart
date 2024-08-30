@@ -904,9 +904,7 @@ class _ProfileState extends State<Profile> {
                                               onPressed: () {
                                                 setState(() {
                                                   selectedPlayers
-                                                      .remove(players);
-                                                  saveSelectedPlayers(
-                                                      selectedPlayers);
+                                                      .remove(country);
                                                   searchController.clear();
                                                 });
                                               },
@@ -1249,7 +1247,7 @@ class _ProfileState extends State<Profile> {
                                             onPressed: () {
                                               setState(() {
                                                 selectedTeam
-                                                    .remove(footballTeams);
+                                                    .remove(country);
 
                                                 // Update the newsController with the new list of country codes
                                                 saveSelectedTeams(
