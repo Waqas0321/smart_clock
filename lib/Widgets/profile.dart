@@ -126,6 +126,8 @@ class _ProfileState extends State<Profile> {
     super.initState();
     loadSelectedCountries();
     loadCountries();
+    loadSelectedPlayers();
+    loadSelectedTeams();
 
     // Listen for changes in the search field
     teamController.addListener(() {
@@ -161,9 +163,15 @@ class _ProfileState extends State<Profile> {
         await placemarkFromCoordinates(position.latitude, position.longitude);
     return placemarks.first.isoCountryCode?.toUpperCase() ?? '';
   }
-  Future<void> saveSelectedTeams(List<String> teams) async {
+  Future<void> saveSelectedTeams(List<String> footballTeams) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('selectedTeams', teams);
+    await prefs.setStringList('selectedTeams', footballTeams);
+  }
+  Future<void> loadSelectedTeams() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      selectedTeam = prefs.getStringList('selectedTeams') ?? [];
+    });
   }
 
   Future<void> saveSelectedCountries(List<String> countries) async {
@@ -174,6 +182,12 @@ class _ProfileState extends State<Profile> {
   Future<void> saveSelectedPlayers(List<String> players) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('SelectedPlayers', players);
+  }
+  Future<void> loadSelectedPlayers() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      selectedPlayers = prefs.getStringList('SelectedPlayers') ?? [];
+    });
   }
 
   Future<void> loadCountries() async {
@@ -890,20 +904,9 @@ class _ProfileState extends State<Profile> {
                                               onPressed: () {
                                                 setState(() {
                                                   selectedPlayers
-                                                      .remove(country);
-
-                                                  // Update the newsController with the new list of country codes
-                                                  var selectedCountryCodes =
-                                                      selectedCountries
-                                                          .map((country) =>
-                                                              countryCodesMap[
-                                                                  country]!)
-                                                          .toList();
-                                                  newsController
-                                                      .updateCountryCodes(
-                                                          selectedCountryCodes);
-                                                  saveSelectedCountries(
-                                                      selectedCountries);
+                                                      .remove(players);
+                                                  saveSelectedPlayers(
+                                                      selectedPlayers);
                                                   searchController.clear();
                                                 });
                                               },
@@ -1246,7 +1249,7 @@ class _ProfileState extends State<Profile> {
                                             onPressed: () {
                                               setState(() {
                                                 selectedTeam
-                                                    .remove(country);
+                                                    .remove(footballTeams);
 
                                                 // Update the newsController with the new list of country codes
                                                 saveSelectedTeams(
