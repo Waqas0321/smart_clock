@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:smart_clock/Widgets/alarm_main.dart';
 import 'package:smart_clock/Widgets/running_line.dart';
+import 'package:smart_clock/page.dart';
 
 import 'package:timezone/timezone.dart' as tz;
 import 'package:smart_clock/Controller/weather_controller.dart';
@@ -170,6 +172,7 @@ return widget.screen == "tablet"
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
+
                           Obx(() => Image.asset(
                                 weatherController.conditionImage.value,
                                 height: 0.1.sh,
@@ -363,6 +366,12 @@ return widget.screen == "tablet"
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      GestureDetector(
+                        onTap: () {
+                          Get.to(UIPage());
+                        },
+                          child: Image(image: AssetImage("assets/remote control.png"),height: 40,width: 40,)),
+                      Gap(5),
                       Obx(() => Image.asset(
                             weatherController.conditionImage.value,
                             height: 0.1.sh,
@@ -412,7 +421,7 @@ return widget.screen == "tablet"
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                hours,
+                                "$hours",
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
                                   color: CustomColor.textBlueColor,

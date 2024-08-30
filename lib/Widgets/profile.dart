@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:gap/gap.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -28,10 +29,84 @@ class Profile extends StatefulWidget {
   State<Profile> createState() => _ProfileState();
 }
 
+List<String> footballTeams = [
+  "Manchester City",
+  "Liverpool",
+  "Bayern Munich",
+  "Barcelona",
+  "Real Madrid",
+  "Juventus",
+  "Paris Saint-Germain",
+  "Chelsea",
+  "Arsenal",
+  "Manchester United",
+  "Inter Milan",
+  "AC Milan",
+  "Borussia Dortmund",
+  "Atletico Madrid",
+  "Sevilla",
+  "Roma",
+  "Tottenham Hotspur",
+  "Ajax",
+  "Porto",
+  "Shakhtar Donetsk",
+  "Brazil",
+  "Germany",
+  "Argentina",
+  "Spain",
+  "France",
+  "England",
+  "Italy",
+  "Netherlands",
+  "Portugal",
+  "Belgium",
+  "Croatia",
+  "Poland",
+  "Sweden",
+  "Denmark",
+  "Switzerland",
+];
+
+List<String> players = [
+  "Lionel Messi",
+  "Cristiano Ronaldo",
+  "Kylian Mbappé",
+  "Robert Lewandowski",
+  "Kevin De Bruyne",
+  "Mohamed Salah",
+  "Virgil van Dijk",
+  "Paul Pogba",
+  "Neymar Jr.",
+  "Eden Hazard",
+  "Harry Kane",
+  "Sergio Agüero",
+  "Trent Alexander-Arnold",
+  "Andrew Robertson",
+  "Alisson Becker",
+  "David de Gea",
+  "Marc-André ter Stegen",
+  "Jan Oblak",
+  "Dayot Upamecano",
+  "Raphael Varane",
+  "Marquinhos",
+  "Sergio Ramos",
+  "Gerard Piqué",
+  "Giorgio Chiellini",
+  "Kalidou Koulibaly",
+  "N'Golo Kanté",
+  "Fabinho",
+  "Casemiro",
+  "Luka Modrić",
+  "Thiago Alcântara",
+];
+
 class _ProfileState extends State<Profile> {
   List<String> selectedCountries = [];
+  List<String> selectedPlayers = [];
+  List<String> selectedTeam = [];
   CustomMatchesController customMatchesController =
       Get.find<CustomMatchesController>();
+
   // final bool _isEditingText = true;
   PlayerMatchesController controllerPlayers =
       Get.find<PlayerMatchesController>();
@@ -86,10 +161,19 @@ class _ProfileState extends State<Profile> {
         await placemarkFromCoordinates(position.latitude, position.longitude);
     return placemarks.first.isoCountryCode?.toUpperCase() ?? '';
   }
+  Future<void> saveSelectedTeams(List<String> teams) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('selectedTeams', teams);
+  }
 
   Future<void> saveSelectedCountries(List<String> countries) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('selectedCountries', countries);
+  }
+
+  Future<void> saveSelectedPlayers(List<String> players) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('SelectedPlayers', players);
   }
 
   Future<void> loadCountries() async {
@@ -198,8 +282,8 @@ class _ProfileState extends State<Profile> {
                                                 .contains(country);
                                           }).toList(),
 
-                                          selectedItem:
-                                              null, // No item should be selected
+                                          selectedItem: null,
+                                          // No item should be selected
                                           itemAsString: (String? item) {
                                             return "Select "; // Always display hint text
                                           },
@@ -377,9 +461,91 @@ class _ProfileState extends State<Profile> {
                                           ],
                                         ),
                                         const Spacer(),
-                                        SizedBox(
-                                          width: 0.2.sw,
-                                          child: _editPlayerTextField(),
+                                        Expanded(
+                                          child: DropdownSearch<String>(
+                                            items: countryList.where((country) {
+                                              return !selectedCountries
+                                                  .contains(country);
+                                            }).toList(),
+
+                                            selectedItem: null,
+                                            // No item should be selected
+                                            itemAsString: (String? item) {
+                                              return "Select "; // Always display hint text
+                                            },
+                                            dropdownDecoratorProps:
+                                                const DropDownDecoratorProps(
+                                              dropdownSearchDecoration:
+                                                  InputDecoration(
+                                                hintText: "Select ",
+                                                hintStyle: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 16),
+                                                enabledBorder:
+                                                    UnderlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                      color: Colors.white,
+                                                      width: 1.0),
+                                                ),
+                                              ),
+                                            ),
+
+                                            onChanged: (newValue) {
+                                              if (newValue != null &&
+                                                  newValue
+                                                      .toLowerCase()
+                                                      .startsWith(
+                                                          searchController.text
+                                                              .toLowerCase())) {
+                                                setState(() {
+                                                  selectedCountries
+                                                      .add(newValue);
+                                                  searchController.clear();
+                                                  var selectedCountryCodes =
+                                                      selectedCountries
+                                                          .map((country) =>
+                                                              countryCodesMap[
+                                                                  country]!)
+                                                          .toList();
+                                                  newsController
+                                                      .updateCountryCodes(
+                                                          selectedCountryCodes);
+                                                  saveSelectedCountries(
+                                                      selectedCountries);
+                                                });
+                                              }
+                                            },
+                                            popupProps: PopupProps.menu(
+                                              showSearchBox: true,
+                                              searchFieldProps: TextFieldProps(
+                                                controller: searchController,
+                                                decoration:
+                                                    const InputDecoration(
+                                                  hintText: "Search ",
+                                                  hintStyle: TextStyle(
+                                                      color: Colors.black),
+                                                  border: OutlineInputBorder(),
+                                                ),
+                                                style: const TextStyle(
+                                                    color: Colors.black),
+                                              ),
+                                              itemBuilder:
+                                                  (context, item, isSelected) {
+                                                // Only display items that start with the search text
+                                                if (item
+                                                    .toLowerCase()
+                                                    .startsWith(searchController
+                                                        .text
+                                                        .toLowerCase())) {
+                                                  return ListTile(
+                                                    title: Text(item),
+                                                  );
+                                                } else {
+                                                  return Container(); // Return an empty container for non-matching items
+                                                }
+                                              },
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -584,61 +750,169 @@ class _ProfileState extends State<Profile> {
                           ? Padding(
                               padding: const EdgeInsets.symmetric(vertical: 30),
                               child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    children: [
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            "Add Favourite FootBall Player",
-                                            style: GoogleFonts.bebasNeue(
-                                              fontWeight: FontWeight.w500,
-                                              color: Colors.white,
-                                              fontSize: (orientation ==
-                                                      Orientation.portrait)
-                                                  ? 16.sp
-                                                  : 10.sp,
+                                  Container(
+                                    width: Get.width,
+                                    child: Row(
+                                      children: [
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "Add Favourite FootBall Player",
+                                              style: GoogleFonts.bebasNeue(
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.white,
+                                                fontSize: (orientation ==
+                                                        Orientation.portrait)
+                                                    ? 16.sp
+                                                    : 10.sp,
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      const Spacer(),
-                                      SizedBox(
-                                        width: 0.3.sw,
-                                        child: _editPlayerTextField(),
-                                      ),
-                                    ],
-                                  ),
-                                  Obx(() => ListView.builder(
-                                        shrinkWrap: true,
-                                        itemCount: customMatchesController
-                                            .listOfPlayersObs.length,
-                                        itemBuilder: (context, index) {
-                                          return Row(
-                                            children: [
-                                              Text(
-                                                customMatchesController
-                                                    .listOfPlayersObs[index],
-                                                style: const TextStyle(
-                                                  color: Colors.white,
+                                          ],
+                                        ),
+                                        Gap(5),
+                                        Expanded(
+                                          child: DropdownSearch<String>(
+                                            items: players.where((player) {
+                                              return !selectedPlayers
+                                                  .contains(player);
+                                            }).toList(),
+                                            selectedItem: null,
+                                            itemAsString: (String? item) {
+                                              return "Select";
+                                            },
+                                            dropdownDecoratorProps:
+                                                const DropDownDecoratorProps(
+                                              dropdownSearchDecoration:
+                                                  InputDecoration(
+                                                hintText: "      Select",
+                                                hintStyle: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 16),
+                                                enabledBorder:
+                                                    UnderlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                      color: Colors.white,
+                                                      width: 1.0),
                                                 ),
                                               ),
-                                              const Spacer(),
-                                              IconButton(
-                                                icon: const Icon(Icons.delete),
-                                                onPressed: () async {
-                                                  await customMatchesController
-                                                      .deletePlayer(index);
-                                                  await controllerPlayers
-                                                      .getMatches();
-                                                },
+                                            ),
+
+                                            // Ensure no selected item is displayed
+
+                                            onChanged: (newValue) {
+                                              if (newValue != null &&
+                                                  newValue
+                                                      .toLowerCase()
+                                                      .startsWith(
+                                                          searchController.text
+                                                              .toLowerCase())) {
+                                                setState(() {
+                                                  selectedPlayers.add(newValue);
+                                                  // Reset selected item to null
+                                                  searchController.clear();
+                                                  saveSelectedPlayers(
+                                                      selectedPlayers);
+                                                });
+                                              }
+                                            },
+                                            popupProps: PopupProps.menu(
+                                              showSearchBox: true,
+                                              searchFieldProps: TextFieldProps(
+                                                controller: searchController,
+                                                decoration:
+                                                    const InputDecoration(
+                                                  hintText: "Search ",
+                                                  hintStyle: TextStyle(
+                                                      color: Colors.black),
+                                                  border: OutlineInputBorder(
+                                                      borderSide: BorderSide(
+                                                          color: Colors.black)),
+                                                ),
+                                                style: const TextStyle(
+                                                    color: Colors.black),
                                               ),
-                                            ],
-                                          );
-                                        },
-                                      )),
+                                              itemBuilder:
+                                                  (context, item, isSelected) {
+                                                // Only display items that start with the search text
+                                                if (item
+                                                    .toLowerCase()
+                                                    .startsWith(searchController
+                                                        .text
+                                                        .toLowerCase())) {
+                                                  return ListTile(
+                                                    title: Text(item),
+                                                  );
+                                                } else {
+                                                  return Container(); // Return an empty container for non-matching items
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    "Selected Players:",
+                                    style: GoogleFonts.bebasNeue(
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.white,
+                                      fontSize: 15.sp,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: selectedPlayers.map((country) {
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 4.0),
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              country,
+                                              style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 15),
+                                            ),
+                                            const Spacer(),
+                                            IconButton(
+                                              icon: const Icon(Icons.delete,
+                                                  color: Color.fromARGB(
+                                                      255, 74, 68, 68)),
+                                              onPressed: () {
+                                                setState(() {
+                                                  selectedPlayers
+                                                      .remove(country);
+
+                                                  // Update the newsController with the new list of country codes
+                                                  var selectedCountryCodes =
+                                                      selectedCountries
+                                                          .map((country) =>
+                                                              countryCodesMap[
+                                                                  country]!)
+                                                          .toList();
+                                                  newsController
+                                                      .updateCountryCodes(
+                                                          selectedCountryCodes);
+                                                  saveSelectedCountries(
+                                                      selectedCountries);
+                                                  searchController.clear();
+                                                });
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
                                   const SizedBox(height: 30),
                                 ],
                               ),
@@ -695,7 +969,7 @@ class _ProfileState extends State<Profile> {
                                             const DropDownDecoratorProps(
                                           dropdownSearchDecoration:
                                               InputDecoration(
-                                            hintText: "Select ",
+                                            hintText: "      Select ",
                                             hintStyle: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 16),
@@ -837,82 +1111,172 @@ class _ProfileState extends State<Profile> {
                                   ]),
                                 ])),
                       const SizedBox(height: 30),
-                      Obx(() =>
-                          customMatchesController.preferenceStatus.value == 1
-                              ? Column(
+                      Obx(() => customMatchesController
+                                  .preferenceStatus.value ==
+                              1
+                          ? Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
                                   children: [
-                                    Row(
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              "Add Your Favourite Football Team",
-                                              style: GoogleFonts.bebasNeue(
-                                                fontWeight: FontWeight.w500,
-                                                color: Colors.white,
-                                                fontSize: (orientation ==
-                                                        Orientation.portrait)
-                                                    ? 15.sp
-                                                    : 10.sp,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const Spacer(),
-                                        SizedBox(
-                                          width: 0.3.sw,
-                                          child: _editTeamDropdown(),
+                                        Text(
+                                          "Add Your Favourite Football Team",
+                                          style: GoogleFonts.bebasNeue(
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.white,
+                                            fontSize: (orientation ==
+                                                    Orientation.portrait)
+                                                ? 15.sp
+                                                : 10.sp,
+                                          ),
                                         ),
                                       ],
                                     ),
-                                    Obx(() => ListView.builder(
-                                          shrinkWrap: true,
-                                          itemCount: customMatchesController
-                                              .listOfTeamsObs.length,
-                                          itemBuilder: (context, index) {
-                                            return Row(
-                                              children: [
-                                                Text(
-                                                  customMatchesController
-                                                      .listOfTeamsObs[index],
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                                const Spacer(),
-                                                IconButton(
-                                                  icon:
-                                                      const Icon(Icons.delete),
-                                                  onPressed: () async {
-                                                    await customMatchesController
-                                                        .deleteTeam(index);
-                                                    await controllerMatches
-                                                        .getMatches();
-                                                  },
-                                                ),
-                                              ],
-                                            );
+                                    Gap(5),
+                                    Expanded(
+                                      child: DropdownSearch<String>(
+                                        items: footballTeams.where((player) {
+                                          return !selectedTeam
+                                              .contains(player);
+                                        }).toList(),
+                                        selectedItem: null,
+                                        itemAsString: (String? item) {
+                                          return "Select";
+                                        },
+                                        dropdownDecoratorProps:
+                                            const DropDownDecoratorProps(
+                                          dropdownSearchDecoration:
+                                              InputDecoration(
+                                            hintText: "     Select",
+                                            hintStyle: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16),
+                                            enabledBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                  color: Colors.white,
+                                                  width: 1.0),
+                                            ),
+                                          ),
+                                        ),
+
+                                        // Ensure no selected item is displayed
+
+                                        onChanged: (newValue) {
+                                          if (newValue != null &&
+                                              newValue.toLowerCase().startsWith(
+                                                  searchController.text
+                                                      .toLowerCase())) {
+                                            setState(() {
+                                              selectedTeam.add(newValue);
+                                              // Reset selected item to null
+                                              searchController.clear();
+                                              saveSelectedTeams(
+                                                  selectedTeam);
+                                            });
+                                          }
+                                        },
+                                        popupProps: PopupProps.menu(
+                                          showSearchBox: true,
+                                          searchFieldProps: TextFieldProps(
+                                            controller: searchController,
+                                            decoration: const InputDecoration(
+                                              hintText: "Search",
+                                              hintStyle: TextStyle(
+                                                  color: Colors.black),
+                                              border: OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                      color: Colors.black)),
+                                            ),
+                                            style: const TextStyle(
+                                                color: Colors.black),
+                                          ),
+                                          itemBuilder:
+                                              (context, item, isSelected) {
+                                            // Only display items that start with the search text
+                                            if (item.toLowerCase().startsWith(
+                                                searchController.text
+                                                    .toLowerCase())) {
+                                              return ListTile(
+                                                title: Text(item),
+                                              );
+                                            } else {
+                                              return Container(); // Return an empty container for non-matching items
+                                            }
                                           },
-                                        )),
-                                  ],
-                                )
-                              : Row(
-                                  children: [
-                                    Text(
-                                      "Add your Favourite FootBall Team",
-                                      style: GoogleFonts.bebasNeue(
-                                        fontWeight: FontWeight.w500,
-                                        color: CustomColor.lightgreyColor,
-                                        fontSize: (orientation ==
-                                                Orientation.portrait)
-                                            ? 15.sp
-                                            : 10.sp,
+                                        ),
                                       ),
                                     ),
                                   ],
-                                )),
+                                ),
+                                const SizedBox(height: 5),
+                                Text(
+                                  "Selected Teams:",
+                                  style: GoogleFonts.bebasNeue(
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                    fontSize: 15.sp,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                Column(
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                                  children: selectedTeam.map((country) {
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 4.0),
+                                      child: Row(
+                                        children: [
+                                          Text(
+                                            country,
+                                            style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 15),
+                                          ),
+                                          const Spacer(),
+                                          IconButton(
+                                            icon: const Icon(Icons.delete,
+                                                color: Color.fromARGB(
+                                                    255, 74, 68, 68)),
+                                            onPressed: () {
+                                              setState(() {
+                                                selectedTeam
+                                                    .remove(country);
+
+                                                // Update the newsController with the new list of country codes
+                                                saveSelectedTeams(
+                                                    selectedTeam);
+                                                searchController.clear();
+                                              });
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
+                            )
+                          : Row(
+                              children: [
+                                Text(
+                                  "Add your Favourite FootBall Team",
+                                  style: GoogleFonts.bebasNeue(
+                                    fontWeight: FontWeight.w500,
+                                    color: CustomColor.lightgreyColor,
+                                    fontSize:
+                                        (orientation == Orientation.portrait)
+                                            ? 15.sp
+                                            : 10.sp,
+                                  ),
+                                ),
+                              ],
+                            )),
                       const SizedBox(height: 120),
                       ElevatedButton(
                           onPressed: () {
@@ -979,8 +1343,8 @@ class _ProfileState extends State<Profile> {
           return []; // Return empty list if pattern is empty or less than 1 character
         }
       },
-      debounceDuration: const Duration(
-          milliseconds: 100), // Adjust debounce duration as needed
+      debounceDuration: const Duration(milliseconds: 100),
+      // Adjust debounce duration as needed
       itemBuilder: (context, suggestion) {
         return ListTile(
           title: Text(
@@ -1071,8 +1435,8 @@ class _ProfileState extends State<Profile> {
           return []; // Return empty list if pattern is empty or less than 1 character
         }
       },
-      debounceDuration: const Duration(
-          milliseconds: 100), // Adjust debounce duration as needed
+      debounceDuration: const Duration(milliseconds: 100),
+      // Adjust debounce duration as needed
       itemBuilder: (context, suggestion) {
         return ListTile(
           title: Text(

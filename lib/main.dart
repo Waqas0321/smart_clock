@@ -11,6 +11,7 @@ import 'package:smart_clock/Controller/player_matches_controller.dart';
 import 'package:smart_clock/Controller/sports_new_controller.dart';
 import 'package:smart_clock/Models/alarm_model.dart';
 import 'package:smart_clock/View/splash_screen.dart';
+import 'package:smart_clock/page.dart';
 import 'package:smart_clock/utils/Colors.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
